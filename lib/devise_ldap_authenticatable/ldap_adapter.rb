@@ -40,6 +40,22 @@ module Devise
       resource = LdapConnect.new(options)
       resource.dn
     end
+    
+    def self.get_entry(login) 
+      options = {:login => login, 
+                 :ldap_auth_username_builder => ::Devise.ldap_auth_username_builder,
+                 :admin => ::Devise.ldap_use_admin_to_bind}
+      resource = LdapConnect.new(options)
+      resource.entry
+    end
+    
+    def self.begins_with(login)
+      options = {:login => login, 
+                 :ldap_auth_username_builder => ::Devise.ldap_auth_username_builder,
+                 :admin => ::Devise.ldap_use_admin_to_bind}
+      resource = LdapConnect.new(options)
+      resource.search
+    end
 
     class LdapConnect
 
@@ -67,18 +83,31 @@ module Devise
         @password = params[:password]
         @new_password = params[:new_password]
       end
-
-      def dn
+      
+      def entry
         DeviseLdapAuthenticatable::Logger.send("LDAP search: #{@attribute}=#{@login}")
         filter = Net::LDAP::Filter.eq(@attribute.to_s, @login.to_s)
         ldap_entry = nil
         @ldap.search(:filter => filter) {|entry| ldap_entry = entry}
+        ldap_entry
+      end
+      
+      def search
+        DeviseLdapAuthenticatable::Logger.send("LDAP search: #{@attribute} begins with #{@login}")
+        filter = Net::LDAP::Filter.eq(@attribute.to_s, @login.to_s + "*")
+        @ldap.search(:filter => filter)
+      end
+
+      def dn
+        ldap_entry = entry
+        
         if ldap_entry.nil?
           @ldap_auth_username_builder.call(@attribute,@login,@ldap)
         else
           ldap_entry.dn
         end
       end
+      
 
       def authenticate!
         @ldap.auth(dn, @password)

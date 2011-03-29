@@ -46,6 +46,10 @@ module Devise
         Devise::LdapAdapter.get_groups(login_with)
       end
       
+      def ldap_entry
+        Devise::LdapAdapter.get_entry(login_with)
+      end
+      
       def ldap_dn
         Devise::LdapAdapter.get_dn(login_with)
       end
@@ -67,7 +71,7 @@ module Devise
           end
                     
           if resource.try(:valid_ldap_authentication?, attributes[:password])
-            resource.save if resource.new_record?
+            resource.save! if resource.new_record?
             return resource
           else
             return nil
@@ -78,6 +82,14 @@ module Devise
           puts "UPDATE_WITH_PASSWORD: #{resource.inspect}"
         end
         
+        def begins_with(login)
+          Devise::LdapAdapter.begins_with(login)
+        end
+        
+        def entry_for(login)
+          Devise::LdapAdapter.get_entry(login)
+        end
+          
       end
     end
   end
