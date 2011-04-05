@@ -56,6 +56,14 @@ module Devise
       resource = LdapConnect.new(options)
       resource.search
     end
+    
+    def self.displayname_begins_with(name)
+      options = {:ldap_auth_username_builder => ::Devise.ldap_auth_username_builder,
+                 :admin => ::Devise.ldap_use_admin_to_bind} 
+                 
+      resource = LdapConnect.new(options)
+      resource.begins_with("displayname", name)
+    end
 
     class LdapConnect
 
@@ -95,6 +103,11 @@ module Devise
       def search
         DeviseLdapAuthenticatable::Logger.send("LDAP search: #{@attribute} begins with #{@login}")
         filter = Net::LDAP::Filter.eq(@attribute.to_s, @login.to_s + "*")
+        @ldap.search(:filter => filter)
+      end
+      
+      def begins_with(attribute, value)
+        filter = Net::LDAP::Filter.eq(attribute, value + "*")
         @ldap.search(:filter => filter)
       end
 

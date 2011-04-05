@@ -89,6 +89,10 @@ module Devise
         def entry_for(login)
           Devise::LdapAdapter.get_entry(login)
         end
+        
+        def ldap_displayname_begins_with(name)
+          Devise::LdapAdapter.displayname_begins_with(name)
+        end
           
       end
     end
